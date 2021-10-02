@@ -13,19 +13,14 @@ type Segment struct {
 }
 
 func main() {
-	//b := regexp.MustCompile(`((?i)we)`).ReplaceAllString("We were all going West.", `%$1%`)
-	//println(b)
-	//
-	//b2 := regexp.MustCompile("(?i)we").FindStringSubmatch("West East")
-	//fmt.Printf("%q\n", b2)
-	//
-	//b3 := regexp.MustCompile("(?i)we").FindAllStringSubmatch("West East, we went out there for gold", -1)
-	//fmt.Printf("%q\n", b3)
 
-	//const SAMPLEINPUT = "We were there one day."
-	//r := parse(SAMPLEINPUT, "we")
-	//fmt.Println(SAMPLEINPUT, r)
-	//printSegments(r)
+
+	fmt.Println(markStrings("I come from a land down under.", []string{"own", "FRO"}))
+	fmt.Println(markStrings("I come from a land down under.", []string{"om", "FRO"}))
+	originalText := "I come from a land downunder"
+	markedString := markStrings(originalText, []string{"om", "FRO"})
+	segments := convertMarkedStringToSegments(originalText, markedString)
+	printSegments(segments)
 
 	printHighlightText("I come FROM a land downunder", "down*own")
 	printHighlightText("this was the file we were talking about", "thi*file")
@@ -45,6 +40,50 @@ func printSegments(segments []Segment){
 		fmt.Print(s.text)
 	}
 	fmt.Printf("\n")
+}
+
+func convertMarkedStringToSegments(originalString string, markedString string) (segments []Segment){
+	highlightOn := false
+	segmentStartPosition := 0
+	for position, char := range markedString{
+		if highlightOn {
+			if char != '*'{
+				segments = append(segments, Segment{text: originalString[segmentStartPosition:position], highlight:true})
+				highlightOn = false
+				segmentStartPosition = position
+			}
+		} else {
+			if char == '*'{
+				segments = append(segments, Segment{text: originalString[segmentStartPosition:position], highlight:false})
+				highlightOn = true
+				segmentStartPosition = position
+			}
+		}
+	}
+	// get the last segment
+	segments = append(segments, Segment{text: originalString[segmentStartPosition:], highlight:highlightOn})
+	return
+}
+
+func markStrings(originalText string, matchStrings []string) (markedString string) {
+	lowerText := strings.ToLower(originalText)
+	markedString = originalText
+	for _, matchString:= range matchStrings{
+		currentPosition :=0
+		for currentPosition < len(lowerText){
+			foundIndex := strings.Index(lowerText[currentPosition:], strings.ToLower(matchString))
+			// If the substring is not found, get out of the loop
+			if foundIndex ==-1 {
+				break
+			}
+			foundIndex = foundIndex + currentPosition
+			markedString = markedString[:foundIndex] + strings.Repeat("*", len(matchString)) + markedString[foundIndex+len(matchString):]
+			currentPosition = foundIndex + len(matchString)
+
+		}
+	}
+
+	return
 }
 
 
