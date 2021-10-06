@@ -36,7 +36,7 @@ func Test_parse(t *testing.T) {
 		{name: "no matching terms", inputText: "sample text", searchTerm: "txt", wantResults: []Segment{{text: "sample text", highlight: false} }},
 		{name: "one matching term", inputText: "sample text", searchTerm: "text", wantResults: []Segment{{text: "sample ", highlight: false},{text: "text", highlight: true} }},
 		{name: "match the entire text", inputText: "sample text", searchTerm: "sample text", wantResults: []Segment{{text: "sample text", highlight: true}}},
-		{name: "match the entire text", inputText: "I have some sample text to share", searchTerm: "sample text", wantResults: []Segment{{text: "I have some ", highlight: false},{text: "sample text", highlight: true}, {text: " to share", highlight: false}}},
+		{name: "partial match in the middle of the text", inputText: "I have some sample text to share", searchTerm: "sample text", wantResults: []Segment{{text: "I have some ", highlight: false},{text: "sample text", highlight: true}, {text: " to share", highlight: false}}},
 		{name: "one matching term, different case", inputText: "sample texT", searchTerm: "TExt", wantResults: []Segment{{text: "sample ", highlight: false},{text: "texT", highlight: true} }},
 		{name:"matching term with wild card", inputText: "I was born in a land downunder", searchTerm: "born*under",
 			wantResults: []Segment{{text: "I was ", highlight: false},

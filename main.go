@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"regexp"
 	"strings"
 )
 
@@ -24,6 +23,8 @@ func main() {
 
 	printHighlightText("I come FROM a land downunder", "down*own")
 	printHighlightText("this was the file we were talking about", "thi*file")
+
+	println(markStrings("sample text", []string{"sample text"}))
 }
 
 func printHighlightText(text string, searchString string){
@@ -46,18 +47,16 @@ func convertMarkedStringToSegments(originalString string, markedString string) (
 	highlightOn := false
 	segmentStartPosition := 0
 	for position, char := range markedString{
-		if highlightOn {
-			if char != '*'{
-				segments = append(segments, Segment{text: originalString[segmentStartPosition:position], highlight:true})
-				highlightOn = false
-				segmentStartPosition = position
-			}
-		} else {
-			if char == '*'{
-				segments = append(segments, Segment{text: originalString[segmentStartPosition:position], highlight:false})
-				highlightOn = true
-				segmentStartPosition = position
-			}
+		// set the highlight when evaluating the first char in the string
+		if position == 0 {
+			highlightOn = char == '*'
+		}
+
+		if (highlightOn && char !='*') || (!highlightOn && char=='*'){
+			// end the existing segment
+			segments = append(segments, Segment{text: originalString[segmentStartPosition:position], highlight:highlightOn})
+			highlightOn = !highlightOn
+			segmentStartPosition = position
 		}
 	}
 	// get the last segment
@@ -88,28 +87,12 @@ func markStrings(originalText string, matchStrings []string) (markedString strin
 
 
 
-func parse(inputText string, searchTerm string) (results []Segment) {
-	const (
-		SEARCHEXPRESSION = "((?i)%s)"
-		PLACEHOLDER = "%%%"
-	)
-
+func parse(inputText string, searchTerm string) (segments []Segment) {
+	// prepare a list of search terms
 	terms := strings.Split(searchTerm, "*")
 	// add markers around all found search strings
-	markedString := inputText
-	for _,term := range terms{
-		searchRE := fmt.Sprintf(SEARCHEXPRESSION, term )
-		markedString = regexp.MustCompile(searchRE).ReplaceAllString(markedString, fmt.Sprintf("%s$1%s", PLACEHOLDER, PLACEHOLDER) )
-	}
-	splits := strings.Split(markedString, PLACEHOLDER)
-	for _,s:= range splits{
-		if len(s)>0{
-			// append any segments which are not empty
-			termFound := CompareIn(terms, s)
-			results = append(results, Segment{text: s, highlight: termFound})
-		}
-	}
-
+	markedString := markStrings(inputText, terms)
+	segments = convertMarkedStringToSegments(inputText, markedString)
 	return
 }
 
