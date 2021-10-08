@@ -21,6 +21,9 @@ func markStrings(originalText string, matchStrings []string) (markedString strin
 	lowerText := strings.ToLower(originalText)
 	markedString = originalText
 	for _, matchString:= range matchStrings{
+		if len(matchString) ==0 {
+			continue
+		}
 		currentPosition :=0
 		for currentPosition < len(lowerText){
 			foundIndex := strings.Index(lowerText[currentPosition:], strings.ToLower(matchString))

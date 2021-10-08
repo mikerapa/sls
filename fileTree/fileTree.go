@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Directory struct {
@@ -12,8 +13,31 @@ type Directory struct {
 	Dirs map[string]Directory
 }
 
+//func matchFilterTerm (fileName string, term string) bool {
+//	return strings.Contains(strings.ToLower(fileName), strings.Trim(strings.ToLower(term), " "))
+//}
+
+
+// TODO create a test for this
+func matchPatterns(fileName string, patternStrings ...string) (bool) {
+	lowerFileName := strings.ToLower(fileName)
+
+	for _, term:= range patternStrings{
+		if len(term) == 0{ // skip empty filter strings
+			continue
+		}
+		if strings.Contains(lowerFileName, strings.Trim(strings.ToLower(term), " ")) {
+			return true
+		}
+	}
+	return false
+}
+
 func GetFileTree(topPath string, searchPatter string) (dirs map[string]Directory){
 	dirs = make(map[string]Directory)
+	// prepare the filter pattern here, because it should only be done once
+	filterTerms := strings.Split(searchPatter, "*")
+
 	err := filepath.Walk(topPath,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -34,7 +58,9 @@ func GetFileTree(topPath string, searchPatter string) (dirs map[string]Directory
 					println("Error: directory is not in the map")
 				}
 				//println("Adding a new file " , dirPath, info.Name())
-				d.Files[info.Name()] = info
+				if matchPatterns(info.Name(), filterTerms... ) {
+					d.Files[info.Name()] = info
+				}
 
 
 			}

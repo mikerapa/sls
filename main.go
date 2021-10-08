@@ -8,27 +8,34 @@ import (
 )
 
 func main() {
-	const (initialPath = "/home/mike/go/src"
+	const (initialPath = "/home/mike/go/src/sls"
 	pattern = "*.go")
 	tree := fileTree.GetFileTree(initialPath, pattern)
 	for _, tv := range tree{
-		printDirectory(tv)
+		printDirectory(tv, pattern)
 	}
-
-	printHighlightText("I come FROM a land downunder", "down*own")
-	printHighlightText("this was the file we were talking about", "thi*file")
+	//
+	//printHighlightText("I come FROM a land downunder", "down*own")
+	//printHighlightText("this was the file we were talking about", "thi*file")
 
 	//println(markStrings("sample text", []string{"sample text"}))
 }
 
-func printDirectory(directory fileTree.Directory){
-	println("Folder: ", directory.Path)
-	for _, fv := range directory.Files{
-		println("File: ", fv.Name())
+func printDirectory(directory fileTree.Directory, filterString string){
+	// only print the directory name if there are files under it
+	if len(directory.Files) > 0 {
+		color.Set(color.FgYellow)
+		println(directory.Path)
+		color.Unset()
+		for _, fv := range directory.Files{
+			fmt.Printf("\t")
+			printHighlightText(fv.Name(), filterString)
+		}
+
 	}
 
 	for _,dv:= range directory.Dirs{
-		printDirectory(dv)
+		printDirectory(dv, filterString)
 	}
 
 }
@@ -46,6 +53,7 @@ func printSegments(segments []segments.Segment){
 		}
 		fmt.Print(s.Text)
 	}
+	color.Unset()
 	fmt.Printf("\n")
 }
 
