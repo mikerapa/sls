@@ -13,12 +13,14 @@ type Directory struct {
 	Dirs map[string]Directory
 }
 
-//func matchFilterTerm (fileName string, term string) bool {
-//	return strings.Contains(strings.ToLower(fileName), strings.Trim(strings.ToLower(term), " "))
-//}
+func MakeNewDir(dirPath string) Directory{
+	newDir := Directory{Path: dirPath}
+	newDir.Files = make(map[string]os.FileInfo)
+	newDir.Dirs = make(map[string]Directory)
+	return newDir
+}
 
 
-// TODO create a test for this
 func matchPatterns(fileName string, patternStrings ...string) (bool) {
 	lowerFileName := strings.ToLower(fileName)
 
@@ -45,11 +47,7 @@ func GetFileTree(topPath string, searchPatter string) (dirs map[string]Directory
 			}
 			//fmt.Println(path, info.Size())
 			if info.IsDir(){
-				// TODO this should be extracted into a function which creates a Dir
-				newDir := Directory{Path: path}
-				newDir.Files = make(map[string]os.FileInfo)
-				newDir.Dirs = make(map[string]Directory)
-				dirs[path] = newDir
+				dirs[path] = MakeNewDir(path)
 				//println("Adding a new directory " , path)
 			} else {
 				dirPath := filepath.Dir(path)
