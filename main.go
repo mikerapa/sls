@@ -25,15 +25,14 @@ func main() {
 
 	flag.Parse()
 	if showHelp{
-		// TODO show the positional arguments
 		fmt.Println("sls [OPTION] [FILTER PATTERN]")
 		flag.PrintDefaults()
 	}
 
-	fmt.Printf("unused args: %v\n", flag.NArg())
-	for i,a:= range flag.Args(){
-		fmt.Printf("argument %d: %s\n", i, a)
-	}
+	//fmt.Printf("unused args: %v\n", flag.NArg())
+	//for i,a:= range flag.Args(){
+	//	fmt.Printf("argument %d: %s\n", i, a)
+	//}
 
 	// process positional argument for filter pattern
 	if filterPattern=="" && flag.NArg()>0{
@@ -87,13 +86,5 @@ func printSegments(segments []segments.Segment){
 	fmt.Printf("\n")
 }
 
-//
-//// Compare a given string to an array of terms. If the string is found in the array of terms, return true.
-//// The Comparison should ignore case.
-//func CompareIn(terms []string, inputString string) bool {
-//	for _, term:= range terms {
-//		if strings.EqualFold(term, inputString){ return true }
-//	}
-//	return false
-//}
+
 
