@@ -18,6 +18,7 @@ func Test_matchPatterns(t *testing.T) {
 		{name: "simple match, multiple terms", fileName: "filename.go", patternStrings: []string{"txt", ".go"}, want: true},
 		{name: "no match", fileName: "filename.go", patternStrings: []string{".txt"}, want: false},
 		{name: "extra space", fileName: " file name.txt", patternStrings: []string{" txt"}, want: true},
+		{name: "no filter", fileName: "file name.txt", patternStrings: []string{""}, want: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -45,3 +46,4 @@ func TestMakeNewDir(t *testing.T) {
 		t.Error("MakeNewDir: Dirs map was not initialized")
 	}
 }
+

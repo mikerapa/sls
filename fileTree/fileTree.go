@@ -21,7 +21,11 @@ func MakeNewDir(dirPath string) Directory{
 }
 
 
-func matchPatterns(fileName string, patternStrings ...string) (bool) {
+func matchPatterns(fileName string, patternStrings ...string) bool {
+	// handle a case in which there is no filter string
+	if len(patternStrings)==1 && len(strings.Trim(patternStrings[0], " "))==0{
+		return true
+	}
 	lowerFileName := strings.ToLower(fileName)
 
 	for _, term:= range patternStrings{
@@ -35,10 +39,10 @@ func matchPatterns(fileName string, patternStrings ...string) (bool) {
 	return false
 }
 
-func GetFileTree(topPath string, searchPatter string) (dirs map[string]Directory){
+func GetFileTree(topPath string, filterPattern string) (dirs map[string]Directory){
 	dirs = make(map[string]Directory)
 	// prepare the filter pattern here, because it should only be done once
-	filterTerms := strings.Split(searchPatter, "*")
+	filterTerms := strings.Split(filterPattern, "*")
 
 	err := filepath.Walk(topPath,
 		func(path string, info os.FileInfo, err error) error {
@@ -59,7 +63,6 @@ func GetFileTree(topPath string, searchPatter string) (dirs map[string]Directory
 				if matchPatterns(info.Name(), filterTerms... ) {
 					d.Files[info.Name()] = info
 				}
-
 
 			}
 			return nil
