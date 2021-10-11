@@ -5,26 +5,6 @@ import (
 	"testing"
 )
 
-//func TestCompareIn(t *testing.T) {
-//	tests := []struct {
-//		name string
-//		terms       []string
-//		inputString string
-//		want bool
-//	}{
-//		{name: "mixed case one term", terms:[]string{"got"}, inputString : "goT", want: true},
-//		{name: "mixed case 3 terms", terms:[]string{"got", "haD", "PUT"}, inputString : "put", want: true},
-//		{name: "mixed case 3 terms no match", terms:[]string{"got", "haD", "PUT"}, inputString : "flub", want: false},
-//		{name: "no terms", terms:[]string{}, inputString : "flub", want: false},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			if got := main.CompareIn(tt.terms, tt.inputString); got != tt.want {
-//				t.Errorf("CompareIn() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
 
 func Test_parse(t *testing.T) {
 	tests := []struct {
