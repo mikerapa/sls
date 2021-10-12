@@ -5,6 +5,11 @@ import (
 	"testing"
 )
 
+func BenchmarkParse(b *testing.B) {
+	for i:=0;i<b.N;i++{
+		_ = Parse("fakefilenamestring.txt", "file*ake")
+	}
+}
 
 func Test_parse(t *testing.T) {
 	tests := []struct {
