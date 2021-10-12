@@ -1,21 +1,21 @@
 package fileTree
 
 import (
+	"io/fs"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 )
 
 type Directory struct {
 	Path string
-	Files map[string]os.FileInfo
+	Files map[string]fs.DirEntry
 	Dirs map[string]Directory
 }
 
 func MakeNewDir(dirPath string) Directory{
 	newDir := Directory{Path: dirPath}
-	newDir.Files = make(map[string]os.FileInfo)
+	newDir.Files = make(map[string]fs.DirEntry)
 	newDir.Dirs = make(map[string]Directory)
 	return newDir
 }
@@ -39,18 +39,19 @@ func matchPatterns(fileName string, patternStrings ...string) bool {
 	return false
 }
 
-func GetFileTree(topPath string, filterPattern string) (dirs map[string]Directory){
+func GetFileTree(fileSystem fs.FS, topPath string, filterPattern string) (dirs map[string]Directory){
 	dirs = make(map[string]Directory)
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
 
-	err := filepath.Walk(topPath,
-		func(path string, info os.FileInfo, err error) error {
+	// TODO consider changing the code below to use the WalkDir function instead of Walk
+	err := fs.WalkDir(fileSystem, topPath,
+		func(path string, dirEntry fs.DirEntry,  err error) error {
 			if err != nil {
 				return err
 			}
 			//fmt.Println(path, info.Size())
-			if info.IsDir(){
+			if dirEntry.IsDir(){
 				dirs[path] = MakeNewDir(path)
 				//println("Adding a new directory " , path)
 			} else {
@@ -60,8 +61,8 @@ func GetFileTree(topPath string, filterPattern string) (dirs map[string]Director
 					println("Error: directory is not in the map")
 				}
 				//println("Adding a new file " , dirPath, info.Name())
-				if matchPatterns(info.Name(), filterTerms... ) {
-					d.Files[info.Name()] = info
+				if matchPatterns(dirEntry.Name(), filterTerms... ) {
+					d.Files[dirEntry.Name()] = dirEntry
 				}
 
 			}

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
+	"os"
 	"sls/fileTree"
 	"sls/segments"
 )
@@ -41,7 +42,7 @@ func main() {
 	//fmt.Printf("path: %s, pattern: %s\n", path, filterPattern)
 
 	// show  the results
-	tree := fileTree.GetFileTree(path, filterPattern)
+	tree := fileTree.GetFileTree(os.DirFS("."), path, filterPattern)
 	for _, tv := range tree{
 		printDirectory(tv, filterPattern)
 	}

@@ -3,6 +3,7 @@ package fileTree
 import (
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 func Test_matchPatterns(t *testing.T) {
@@ -47,11 +48,30 @@ func TestMakeNewDir(t *testing.T) {
 	}
 }
 
-func TestGetFileTree(t *testing.T) {
-	const (testDirPath = "../testfiles"
-		moreTestDirPath = "../testfiles/moretestfiles"
-	)
 
+func BenchmarkGetFileTree(b *testing.B) {
+	const (TESTDIRPATH = "testfiles")
+	fakeFS:= makeTestFS()
+	for i:=0; i<b.N; i++{
+		_ = GetFileTree(fakeFS, TESTDIRPATH, "")
+
+	}
+}
+
+func makeTestFS() fstest.MapFS{
+	fakeFS := fstest.MapFS{
+		"testfiles/testfile1.txt": {},
+		"testfiles/anotherfile.txt": {},
+		"testfiles/moretestfiles/one.txt": {},
+		"testfiles/moretestfiles/two.txt": {},
+	}
+	return fakeFS
+}
+
+func TestGetFileTree(t *testing.T) {
+	const (testDirPath = "testfiles"
+		moreTestDirPath = "testfiles/moretestfiles"
+	)
 	tests := []struct {
 		name string
 		filterPatter string
@@ -63,10 +83,11 @@ func TestGetFileTree(t *testing.T) {
 		{name: "one file in the sub-directory", filterPatter: "two", wantTestFilesCount: 0, wantMoreTestFilesCount: 1},
 		{"one file in the main directory", "1", 1, 0},
 	}
+	fakeFS:= makeTestFS()
 
 	for _,currentTest := range tests {
 		t.Run(currentTest.name, func (t *testing.T){
-			gotDirs := GetFileTree(testDirPath, currentTest.filterPatter)
+			gotDirs := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter)
 
 			// make sure there is a sub-directory
 			if len(gotDirs[testDirPath].Dirs)==1{
