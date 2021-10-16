@@ -3,6 +3,7 @@ package fileTree
 import (
 	"io/fs"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -44,13 +45,14 @@ func GetFileTree(fileSystem fs.FS, topPath string, filterPattern string) (dirs m
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
 
-	// TODO consider changing the code below to use the WalkDir function instead of Walk
+	// walk the directory and files
 	err := fs.WalkDir(fileSystem, topPath,
-		func(path string, dirEntry fs.DirEntry,  err error) error {
-			if err != nil {
-				return err
+		func(path string, dirEntry fs.DirEntry,  err2 error) error {
+			if err2 != nil {
+				wd,_ := os.Getwd()
+				log.Printf("ERROR: %s, path: %s, Working Directory: %s\n", err2.Error(), path, wd)
+				return err2
 			}
-			//fmt.Println(path, info.Size())
 			if dirEntry.IsDir(){
 				dirs[path] = MakeNewDir(path)
 				//println("Adding a new directory " , path)
@@ -69,7 +71,7 @@ func GetFileTree(fileSystem fs.FS, topPath string, filterPattern string) (dirs m
 			return nil
 		})
 	if err != nil {
-		log.Println(err)
+		log.Println("ERROR: ", err.Error())
 	}
 	return
 }
