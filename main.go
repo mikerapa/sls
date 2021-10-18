@@ -22,10 +22,17 @@ func main() {
 		os.Exit(0)
 	}
 
+	// fix the path
+	path, err = fileTree.RegularizePath(path)
+	if err != nil {
+		fmt.Printf("path error: %s, path = %s", err.Error(), path)
+		os.Exit(0)
+	}
+
 	fmt.Printf("path: %s, pattern: %s\n", path, filterPattern)
 
 	// get the file tree and show  the results
-	tree := fileTree.GetFileTree(os.DirFS("."), path, filterPattern)
+	tree := fileTree.GetFileTree(os.DirFS(path), ".", filterPattern)
 	for _, tv := range tree{
 		cli.PrintDirectory(tv, filterPattern)
 	}

@@ -1,9 +1,11 @@
 package fileTree
 
 import (
+	"errors"
 	"io/fs"
 	"log"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 )
@@ -40,13 +42,32 @@ func matchPatterns(fileName string, patternStrings ...string) bool {
 	return false
 }
 
-func GetFileTree(fileSystem fs.FS, topPath string, filterPattern string) (dirs map[string]Directory){
+func RegularizePath(inputPath string) (outputPath string, err error) {
+	outputPath = strings.Trim(inputPath, " ")
+
+	// check for the tilde shortcut
+	if strings.HasPrefix(outputPath, "~"){
+		// the path provided contains a tilde which is a shortcut
+		usr, err := user.Current()
+		if err != nil {
+			return "", errors.New("path provided contains a tilde but the user could not be resolved")
+		}
+		homeDir := usr.HomeDir
+		// replace the tilde with the home directory
+		outputPath = strings.Replace(outputPath, "~", homeDir, -1)
+	}
+	// clean the path before returning
+	outputPath = filepath.Clean(outputPath)
+	return
+}
+
+func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs map[string]Directory){
 	dirs = make(map[string]Directory)
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
 
 	// walk the directory and files
-	err := fs.WalkDir(fileSystem, topPath,
+	err := fs.WalkDir(fileSystem, rootPath,
 		func(path string, dirEntry fs.DirEntry,  err2 error) error {
 			if err2 != nil {
 				wd,_ := os.Getwd()

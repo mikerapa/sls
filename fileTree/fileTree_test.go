@@ -110,3 +110,40 @@ func TestGetFileTree(t *testing.T) {
 	}
 
 }
+
+func TestRegularizePath(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputPath string
+		wantErr        bool
+	}{
+		{"extra slash", "/testpath/", false},
+		{"tilde", "~/mypath/", false},
+		{"two dots", "./mypath/", false},
+	}
+	forbiddenPrefixes := []string{ "~", "./"}
+	forbiddenSuffixes := []string{`\`, "/"}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOutputPath, err := RegularizePath(tt.inputPath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RegularizePath() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			for _, pf:= range forbiddenPrefixes{
+				if strings.HasPrefix(gotOutputPath, pf){
+					t.Errorf("output path should not start with %s, got %s", pf, gotOutputPath )
+				}
+			}
+
+			for _, sfx := range forbiddenSuffixes{
+				if strings.HasSuffix(gotOutputPath, sfx) {
+					t.Errorf("output path should not end with %s, got %s", sfx, gotOutputPath )
+				}
+			}
+
+		})
+	}
+}

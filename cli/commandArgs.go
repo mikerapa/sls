@@ -1,14 +1,13 @@
 package cli
 
-import (
+
+import  (
 	"flag"
 	"os"
-	"path/filepath"
 )
 
 func ProcessCommandLine() (showHelp bool, path string, filterPattern  string,command *flag.FlagSet, err error){
 	showHelp, path, filterPattern, command, err = parseCommandLineArgs(os.Args[1:])
-	path = filepath.Clean(path)
 	return
 }
 

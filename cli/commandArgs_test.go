@@ -14,7 +14,7 @@ func TestParseCommandLineArgs(t *testing.T) {
 		wantErr           bool
 	}{
 		{"no inputs", []string{}, false, ".",  "", false},
-		{"just a path", []string{"-p", "testfolder",}, false, "testfolder", "", false},
+		{"just a path", []string{"-p", "testfolder"}, false, "testfolder", "", false},
 		{"path and positional filter2", []string{"--path", "testfolder", ".txt"}, false, "testfolder", ".txt", false},
 		{"path and positional filter", []string{"-p", "testfolder", ".txt"}, false, "testfolder", ".txt", false},
 		{"path and filter", []string{"-f", ".txt", "-p", "testfolder"}, false, "testfolder", ".txt", false},
