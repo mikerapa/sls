@@ -14,7 +14,14 @@ func ShowHelp(command *flag.FlagSet){
 	command.PrintDefaults()
 }
 
+func PrintFileCount(fileCount int){
+	//fmt.Printf("\t")
+	color.Set(color.BgYellow, color.FgBlack)
+	fmt.Printf("\t%d files found\t", fileCount)
+	color.Unset()
+	fmt.Printf("\n")
 
+}
 
 func PrintDirectory(directory fileTree.Directory, filterString string){
 	// only print the directory name if there are files under it

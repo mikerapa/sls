@@ -61,7 +61,7 @@ func RegularizePath(inputPath string) (outputPath string, err error) {
 	return
 }
 
-func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs map[string]Directory){
+func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs map[string]Directory, fileCount int){
 	dirs = make(map[string]Directory)
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
@@ -84,8 +84,10 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs 
 					println("Error: directory is not in the map")
 				}
 				//println("Adding a new file " , dirPath, info.Name())
+				// if the file matches the filter pattern, add it to the dictionary
 				if matchPatterns(dirEntry.Name(), filterTerms... ) {
 					d.Files[dirEntry.Name()] = dirEntry
+					fileCount++
 				}
 
 			}

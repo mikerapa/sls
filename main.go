@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-
 	showHelp, path, filterPattern, command, err := cli.ProcessCommandLine()
 
 	if err!=nil {
@@ -29,14 +28,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Printf("path: %s, pattern: %s\n", path, filterPattern)
+	//fmt.Printf("path: %s, pattern: %s\n", path, filterPattern)
 
 	// get the file tree and show  the results
-	tree := fileTree.GetFileTree(os.DirFS(path), ".", filterPattern)
+	tree, fileCount := fileTree.GetFileTree(os.DirFS(path), ".", filterPattern)
 	for _, tv := range tree{
 		cli.PrintDirectory(tv, filterPattern)
 	}
-
+	cli.PrintFileCount(fileCount)
 }
 
 

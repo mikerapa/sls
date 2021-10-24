@@ -53,7 +53,7 @@ func BenchmarkGetFileTree(b *testing.B) {
 	const (TESTDIRPATH = "testfiles")
 	fakeFS:= makeTestFS()
 	for i:=0; i<b.N; i++{
-		_ = GetFileTree(fakeFS, TESTDIRPATH, "")
+		_,_ = GetFileTree(fakeFS, TESTDIRPATH, "")
 
 	}
 }
@@ -87,7 +87,7 @@ func TestGetFileTree(t *testing.T) {
 
 	for _,currentTest := range tests {
 		t.Run(currentTest.name, func (t *testing.T){
-			gotDirs := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter)
+			gotDirs, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter)
 
 			// make sure there is a sub-directory
 			if len(gotDirs[testDirPath].Dirs)==1{
@@ -104,6 +104,11 @@ func TestGetFileTree(t *testing.T) {
 			gotFilesCountMoreTestDir := len(gotDirs[moreTestDirPath].Files)
 			if gotFilesCountMoreTestDir != currentTest.wantMoreTestFilesCount{
 				t.Errorf("there should be %d files in %s, got %d", currentTest.wantMoreTestFilesCount, moreTestDirPath, gotFilesCountMoreTestDir)
+			}
+
+			// make sure the file count is correct
+			if gotFileCount != (currentTest.wantMoreTestFilesCount + currentTest.wantTestFilesCount){
+				t.Errorf("expected %d files, got %d files", currentTest.wantTestFilesCount+currentTest.wantMoreTestFilesCount, gotFileCount)
 			}
 
 		})
