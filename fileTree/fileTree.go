@@ -2,9 +2,9 @@ package fileTree
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"log"
-	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -70,9 +70,11 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs 
 	err := fs.WalkDir(fileSystem, rootPath,
 		func(path string, dirEntry fs.DirEntry,  err2 error) error {
 			if err2 != nil {
-				wd,_ := os.Getwd()
-				log.Printf("ERROR: %s, path: %s, Working Directory: %s\n", err2.Error(), path, wd)
-				return err2
+				// if there is an error here, it's likely because a directory is inaccessible. Print the error
+				// but do not return it. If the error is returned, the WalkDir function will not process remaining
+				// directories.
+				fmt.Printf("ERROR: %s\n", err2.Error())
+				return nil
 			}
 			if dirEntry.IsDir(){
 				dirs[path] = MakeNewDir(path)
@@ -83,7 +85,7 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs 
 				if !ok {
 					println("Error: directory is not in the map")
 				}
-				//println("Adding a new file " , dirPath, info.Name())
+
 				// if the file matches the filter pattern, add it to the dictionary
 				if matchPatterns(dirEntry.Name(), filterTerms... ) {
 					d.Files[dirEntry.Name()] = dirEntry
@@ -94,6 +96,8 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs 
 			return nil
 		})
 	if err != nil {
+
+		// Show any error. If the error came from WalkDir, it would not have been displayed previously.
 		log.Println("ERROR: ", err.Error())
 	}
 	return
