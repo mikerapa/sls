@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	showHelp, path, filterPattern, command, err := cli.ProcessCommandLine()
+	showHelp, path, filterPattern, showHidden,  command, err := cli.ProcessCommandLine()
 
 	if err!=nil {
 		// if there is an error, show the error message to the user
@@ -31,7 +31,7 @@ func main() {
 	//fmt.Printf("path: %s, pattern: %s\n", path, filterPattern)
 
 	// get the file tree and show  the results
-	tree, fileCount := fileTree.GetFileTree(os.DirFS(path), ".", filterPattern)
+	tree, fileCount := fileTree.GetFileTree(os.DirFS(path), ".", filterPattern, showHidden)
 	cli.PrintDirectory(tree, filterPattern)
 	cli.PrintFileCount(fileCount)
 }

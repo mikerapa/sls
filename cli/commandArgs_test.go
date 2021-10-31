@@ -24,7 +24,7 @@ func TestParseCommandLineArgs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotShowHelp, gotPath, gotFilterPattern, gotCommand, err := parseCommandLineArgs(tt.args)
+			gotShowHelp, gotPath, gotFilterPattern, _, gotCommand, err := parseCommandLineArgs(tt.args)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseCommandLineArgs() error = %v, wantErr %v", err, tt.wantErr)

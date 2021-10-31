@@ -26,7 +26,7 @@ func PrintFileCount(fileCount int){
 // PrintDirectory recursive function for printing search results by directory
 func PrintDirectory(directory fileTree.Directory, filterString string){
 	// print the file list
-	// Only print the directory name if there are files directly in the directory. 
+	// Only print the directory name if there are files directly in the directory.
 	if len(directory.Files) > 0 {
 		color.Set(color.FgYellow)
 		println(directory.Path)

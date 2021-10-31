@@ -60,9 +60,8 @@ func RegularizePath(inputPath string) (outputPath string, err error) {
 	return
 }
 
-// TODO need a parameter to control the hidden file filter
 // recursive function to read directory, apply filter criteria, and populate dir struct
-func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string) (dir Directory, fileCount int){
+func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string, showHidden bool) (dir Directory, fileCount int){
 	dirEntries, err := fs.ReadDir(fileSystem, dirPath)
 	if err != nil{
 		fmt.Printf("ERROR: %s\n", err.Error())
@@ -73,8 +72,8 @@ func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string) (dir Direct
 		p:=filepath.Join(dirPath, entry.Name())
 
 		if entry.IsDir(){
-			if !isHiddenFile(p){
-				d,subFileCount := loadDir(fileSystem, p,filterTerms )
+			if showHidden || !isHiddenFile(p){
+				d,subFileCount := loadDir(fileSystem, p,filterTerms, showHidden )
 				// only add the dir to the results if there are files
 				if subFileCount>0{
 					dir.Dirs[p] = d
@@ -84,7 +83,7 @@ func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string) (dir Direct
 			}
 
 		} else {
-			if !isHiddenFile(p) && matchPatterns(entry.Name(), filterTerms... ) {
+			if (showHidden || !isHiddenFile(p)) && matchPatterns(entry.Name(), filterTerms... ) {
 				dir.Files[entry.Name()] = entry
 				fileCount ++
 			}
@@ -94,11 +93,11 @@ func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string) (dir Direct
 	return
 }
 
-func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dir Directory, fileCount int){
+func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHidden bool) (dir Directory, fileCount int){
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
 
-	dir, fileCount = loadDir(fileSystem, rootPath, filterTerms)
+	dir, fileCount = loadDir(fileSystem, rootPath, filterTerms, showHidden)
 	return
 
 }

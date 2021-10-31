@@ -53,7 +53,7 @@ func BenchmarkGetFileTree(b *testing.B) {
 	const (TESTDIRPATH = "testfiles")
 	fakeFS:= makeTestFS()
 	for i:=0; i<b.N; i++{
-		_,_ = GetFileTree(fakeFS, TESTDIRPATH, "")
+		_,_ = GetFileTree(fakeFS, TESTDIRPATH, "", false)
 
 	}
 }
@@ -87,7 +87,8 @@ func TestGetFileTree(t *testing.T) {
 
 	for _,currentTest := range tests {
 		t.Run(currentTest.name, func (t *testing.T){
-			gotDir, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter)
+			// TODO change this test to include the showHidden flag
+			gotDir, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter, false)
 
 			// test the number of files in the main dir
 			gotFilesCountTestDir := len(gotDir.Files)
