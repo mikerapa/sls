@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -61,44 +60,45 @@ func RegularizePath(inputPath string) (outputPath string, err error) {
 	return
 }
 
-func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dirs map[string]Directory, fileCount int){
-	dirs = make(map[string]Directory)
+// TODO need a parameter to control the hidden file filter
+// recursive function to read directory, apply filter criteria, and populate dir struct
+func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string) (dir Directory, fileCount int){
+	dirEntries, err := fs.ReadDir(fileSystem, dirPath)
+	if err != nil{
+		fmt.Printf("ERROR: %s\n", err.Error())
+		return
+	}
+	dir = MakeNewDir(dirPath)
+	for _, entry := range dirEntries {
+		p:=filepath.Join(dirPath, entry.Name())
+
+		if entry.IsDir(){
+			if !isHiddenFile(p){
+				d,subFileCount := loadDir(fileSystem, p,filterTerms )
+				// only add the dir to the results if there are files
+				if subFileCount>0{
+					dir.Dirs[p] = d
+					fileCount = fileCount + subFileCount
+				}
+
+			}
+
+		} else {
+			if !isHiddenFile(p) && matchPatterns(entry.Name(), filterTerms... ) {
+				dir.Files[entry.Name()] = entry
+				fileCount ++
+			}
+		}
+	}
+
+	return
+}
+
+func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string) (dir Directory, fileCount int){
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
 
-	// walk the directory and files
-	err := fs.WalkDir(fileSystem, rootPath,
-		func(path string, dirEntry fs.DirEntry,  err2 error) error {
-			if err2 != nil {
-				// if there is an error here, it's likely because a directory is inaccessible. Print the error
-				// but do not return it. If the error is returned, the WalkDir function will not process remaining
-				// directories.
-				fmt.Printf("ERROR: %s\n", err2.Error())
-				return nil
-			}
-			if dirEntry.IsDir(){
-				dirs[path] = MakeNewDir(path)
-				//println("Adding a new directory " , path)
-			} else {
-				dirPath := filepath.Dir(path)
-				d, ok := dirs[dirPath]
-				if !ok {
-					println("Error: directory is not in the map")
-				}
-
-				// if the file matches the filter pattern, add it to the dictionary
-				if matchPatterns(dirEntry.Name(), filterTerms... ) {
-					d.Files[dirEntry.Name()] = dirEntry
-					fileCount++
-				}
-
-			}
-			return nil
-		})
-	if err != nil {
-
-		// Show any error. If the error came from WalkDir, it would not have been displayed previously.
-		log.Println("ERROR: ", err.Error())
-	}
+	dir, fileCount = loadDir(fileSystem, rootPath, filterTerms)
 	return
+
 }

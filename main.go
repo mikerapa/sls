@@ -32,9 +32,7 @@ func main() {
 
 	// get the file tree and show  the results
 	tree, fileCount := fileTree.GetFileTree(os.DirFS(path), ".", filterPattern)
-	for _, tv := range tree{
-		cli.PrintDirectory(tv, filterPattern)
-	}
+	cli.PrintDirectory(tree, filterPattern)
 	cli.PrintFileCount(fileCount)
 }
 

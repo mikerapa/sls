@@ -87,21 +87,16 @@ func TestGetFileTree(t *testing.T) {
 
 	for _,currentTest := range tests {
 		t.Run(currentTest.name, func (t *testing.T){
-			gotDirs, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter)
-
-			// make sure there is a sub-directory
-			if len(gotDirs[testDirPath].Dirs)==1{
-				t.Errorf("there should be 1 directory under this folder, got %d. ", len(gotDirs[testDirPath].Dirs))
-			}
+			gotDir, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter)
 
 			// test the number of files in the main dir
-			gotFilesCountTestDir := len(gotDirs[testDirPath].Files)
+			gotFilesCountTestDir := len(gotDir.Files)
 			if gotFilesCountTestDir!=currentTest.wantTestFilesCount{
 				t.Errorf("there should be %d files in %s, got %d", currentTest.wantTestFilesCount, testDirPath, gotFilesCountTestDir)
 			}
 
 			// test the files in the more directory
-			gotFilesCountMoreTestDir := len(gotDirs[moreTestDirPath].Files)
+			gotFilesCountMoreTestDir := len(gotDir.Dirs[moreTestDirPath].Files)
 			if gotFilesCountMoreTestDir != currentTest.wantMoreTestFilesCount{
 				t.Errorf("there should be %d files in %s, got %d", currentTest.wantMoreTestFilesCount, moreTestDirPath, gotFilesCountMoreTestDir)
 			}
