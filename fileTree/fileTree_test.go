@@ -41,11 +41,6 @@ func TestMakeNewDir(t *testing.T) {
 	if newDir.Files == nil {
 		t.Error("MakeNewDir: Files map was not initialized")
 	}
-
-	// make sure the Dirs map has been made
-	if newDir.Dirs == nil {
-		t.Error("MakeNewDir: Dirs map was not initialized")
-	}
 }
 
 
@@ -75,36 +70,29 @@ func TestGetFileTree(t *testing.T) {
 	tests := []struct {
 		name string
 		filterPatter string
-		wantTestFilesCount int
-		wantMoreTestFilesCount int
+		wantFileCount int
+		wantDirCount int
 	}{
-		{name: "all files", filterPatter: ".txt", wantTestFilesCount: 2, wantMoreTestFilesCount: 2},
-		{name: "no files", filterPatter: ".hg", wantTestFilesCount: 0, wantMoreTestFilesCount: 0},
-		{name: "one file in the sub-directory", filterPatter: "two", wantTestFilesCount: 0, wantMoreTestFilesCount: 1},
-		{"one file in the main directory", "1", 1, 0},
+		{name: "all files", filterPatter: ".txt", wantFileCount: 4, wantDirCount: 2},
+		{name: "no files", filterPatter: ".hg", wantFileCount: 0, wantDirCount: 0},
+		{name: "one file in the sub-directory", filterPatter: "two", wantFileCount: 1,wantDirCount: 1},
+		{"one file in the main directory", "1", 1, 1},
 	}
 	fakeFS:= makeTestFS()
 
 	for _,currentTest := range tests {
 		t.Run(currentTest.name, func (t *testing.T){
 			// TODO change this test to include the showHidden flag
-			gotDir, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter, false)
+			gotDirMap, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter, false)
 
-			// test the number of files in the main dir
-			gotFilesCountTestDir := len(gotDir.Files)
-			if gotFilesCountTestDir!=currentTest.wantTestFilesCount{
-				t.Errorf("there should be %d files in %s, got %d", currentTest.wantTestFilesCount, testDirPath, gotFilesCountTestDir)
-			}
-
-			// test the files in the more directory
-			gotFilesCountMoreTestDir := len(gotDir.Dirs[moreTestDirPath].Files)
-			if gotFilesCountMoreTestDir != currentTest.wantMoreTestFilesCount{
-				t.Errorf("there should be %d files in %s, got %d", currentTest.wantMoreTestFilesCount, moreTestDirPath, gotFilesCountMoreTestDir)
+			// test the number of dirs
+			if currentTest.wantDirCount != len(gotDirMap) {
+				t.Errorf("there should be %d dirs returned from GetFileTree, got %d", currentTest.wantDirCount, len(gotDirMap))
 			}
 
 			// make sure the file count is correct
-			if gotFileCount != (currentTest.wantMoreTestFilesCount + currentTest.wantTestFilesCount){
-				t.Errorf("expected %d files, got %d files", currentTest.wantTestFilesCount+currentTest.wantMoreTestFilesCount, gotFileCount)
+			if gotFileCount != currentTest.wantFileCount{
+				t.Errorf("expected %d files, got %d files", currentTest.wantFileCount, gotFileCount)
 			}
 
 		})

@@ -7,18 +7,18 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 )
 
 type Directory struct {
 	Path string
 	Files map[string]fs.DirEntry
-	Dirs map[string]Directory
 }
 
 func MakeNewDir(dirPath string) Directory{
 	newDir := Directory{Path: dirPath}
 	newDir.Files = make(map[string]fs.DirEntry)
-	newDir.Dirs = make(map[string]Directory)
 	return newDir
 }
 
@@ -61,43 +61,72 @@ func RegularizePath(inputPath string) (outputPath string, err error) {
 }
 
 // recursive function to read directory, apply filter criteria, and populate dir struct
-func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string, showHidden bool) (dir Directory, fileCount int){
+func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string, showHidden bool, dirChan chan Directory, wg *sync.WaitGroup) {
+	defer wg.Done()
+	//fmt.Printf("inside loadDir for %s\n", dirPath)
 	dirEntries, err := fs.ReadDir(fileSystem, dirPath)
 	if err != nil{
 		fmt.Printf("ERROR: %s\n", err.Error())
 		return
 	}
-	dir = MakeNewDir(dirPath)
+	dir := MakeNewDir(dirPath)
 	for _, entry := range dirEntries {
 		p:=filepath.Join(dirPath, entry.Name())
 
 		if entry.IsDir(){
 			if showHidden || !isHiddenFile(p){
-				d,subFileCount := loadDir(fileSystem, p,filterTerms, showHidden )
-				// only add the dir to the results if there are files
-				if subFileCount>0{
-					dir.Dirs[p] = d
-					fileCount = fileCount + subFileCount
-				}
-
+				wg.Add(1)
+				//fmt.Printf("calling loadDir for %s\n", p)
+				go loadDir(fileSystem, p,filterTerms, showHidden, dirChan, wg )
 			}
 
 		} else {
 			if (showHidden || !isHiddenFile(p)) && matchPatterns(entry.Name(), filterTerms... ) {
+				//fmt.Printf("adding file %s\n", p)
 				dir.Files[entry.Name()] = entry
-				fileCount ++
 			}
 		}
 	}
 
-	return
+	// if this dir has files, send it back to the channel
+	if len(dir.Files)>0{
+		//fmt.Printf("sending %s to dirChan\n", dir.Path)
+		wg.Add(1)
+		dirChan <- dir
+	}
+	//fmt.Printf("done with loadDir for %s\n", dirPath)
 }
 
-func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHidden bool) (dir Directory, fileCount int){
+
+
+func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHidden bool) (dirs map[string]Directory, fileCount int){
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
+	dirChan := make (chan Directory, 50)
+	dirs = make(map[string]Directory)
+	wg := sync.WaitGroup{}
+	var fileCountInt64 int64 = 0
+	go func(){
+		for newDir := range dirChan{
+			//fmt.Printf("1- got a dir in the dirChan %s, new file count %d, total file cound %d\n", newDir.Path, len(newDir.Files), fileCountInt64)
+			// TODO the atomic call below may not be needed.
+			dirs[newDir.Path] = newDir
+			var newFilesCount int64 = int64(len(newDir.Files))
+			atomic.AddInt64(&fileCountInt64, newFilesCount)
+			//fmt.Printf("2- got a dir in the dirChan %s, new file count %d, total file cound %d\n", newDir.Path, len(newDir.Files), fileCountInt64)
+			wg.Done()
+		}
 
-	dir, fileCount = loadDir(fileSystem, rootPath, filterTerms, showHidden)
+	}()
+	wg.Add(1)
+	go loadDir(fileSystem, rootPath, filterTerms, showHidden, dirChan, &wg)
+
+
+	wg.Wait()
+	close(dirChan)
+	// TODO the dirs in the list are not sorted.
+	//fmt.Printf("closing the channel\n")
+	fileCount = int(fileCountInt64)
 	return
 
 }

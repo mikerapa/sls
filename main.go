@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"sls/cli"
 	"sls/fileTree"
 )
 
 func main() {
+	runtime.GOMAXPROCS(3)
 	showHelp, path, filterPattern, showHidden,  command, err := cli.ProcessCommandLine()
 
 	if err!=nil {
