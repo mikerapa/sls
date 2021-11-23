@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os/user"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -15,6 +16,14 @@ type Directory struct {
 	Path string
 	Files map[string]fs.DirEntry
 }
+
+// declare the DirList type
+type DirList []Directory
+func (dl DirList) Len() int {return len(dl)}
+func (dl DirList) Less(a,b int) bool {return dl[a].Path<dl[b].Path}
+func (dl DirList) Swap(a,b int) {dl[a], dl[b] = dl[b], dl[a]}
+func (dl DirList) Add(newDir Directory) DirList { return append(dl, newDir)}
+
 
 func MakeNewDir(dirPath string) Directory{
 	newDir := Directory{Path: dirPath}
@@ -99,18 +108,18 @@ func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string, showHidden 
 
 
 
-func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHidden bool) (dirs map[string]Directory, fileCount int){
+func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHidden bool) (dirs DirList, fileCount int){
 	// prepare the filter pattern here, because it should only be done once
 	filterTerms := strings.Split(filterPattern, "*")
 	dirChan := make (chan Directory, 50)
-	dirs = make(map[string]Directory)
+	//dirs = make(map[string]Directory)
 	wg := sync.WaitGroup{}
 	var fileCountInt64 int64 = 0
 	go func(){
 		for newDir := range dirChan{
 			//fmt.Printf("1- got a dir in the dirChan %s, new file count %d, total file cound %d\n", newDir.Path, len(newDir.Files), fileCountInt64)
 			// TODO the atomic call below may not be needed.
-			dirs[newDir.Path] = newDir
+			dirs = dirs.Add(newDir)
 			var newFilesCount int64 = int64(len(newDir.Files))
 			atomic.AddInt64(&fileCountInt64, newFilesCount)
 			//fmt.Printf("2- got a dir in the dirChan %s, new file count %d, total file cound %d\n", newDir.Path, len(newDir.Files), fileCountInt64)
@@ -124,7 +133,8 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHi
 
 	wg.Wait()
 	close(dirChan)
-	// TODO the dirs in the list are not sorted.
+	// sort the directories by path
+	sort.Sort(dirs)
 	//fmt.Printf("closing the channel\n")
 	fileCount = int(fileCountInt64)
 	return

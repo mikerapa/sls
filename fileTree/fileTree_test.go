@@ -83,16 +83,27 @@ func TestGetFileTree(t *testing.T) {
 	for _,currentTest := range tests {
 		t.Run(currentTest.name, func (t *testing.T){
 			// TODO change this test to include the showHidden flag
-			gotDirMap, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter, false)
+			dirs, gotFileCount := GetFileTree(fakeFS, testDirPath, currentTest.filterPatter, false)
 
 			// test the number of dirs
-			if currentTest.wantDirCount != len(gotDirMap) {
-				t.Errorf("there should be %d dirs returned from GetFileTree, got %d", currentTest.wantDirCount, len(gotDirMap))
+			if currentTest.wantDirCount != len(dirs) {
+				t.Errorf("there should be %d dirs returned from GetFileTree, got %d", currentTest.wantDirCount, len(dirs))
 			}
 
 			// make sure the file count is correct
 			if gotFileCount != currentTest.wantFileCount{
 				t.Errorf("expected %d files, got %d files", currentTest.wantFileCount, gotFileCount)
+			}
+
+			// test the sorting order if there are 2 directories in the list
+			if currentTest.wantDirCount==2{
+				if testDirPath != dirs[0].Path{
+					t.Errorf("Sorting error: %s should be the first directory in the list", testDirPath)
+				}
+
+				if moreTestDirPath!= dirs[1].Path{
+					t.Errorf("Sorting error: %s should be the second directory in the list", moreTestDirPath)
+				}
 			}
 
 		})
