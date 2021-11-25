@@ -35,7 +35,7 @@ func PrintDirectory(dirs fileTree.DirList, filterString string){
 			color.Unset()
 			for _, fv := range dv.Files {
 				fmt.Printf("\t")
-				printHighlightText(fv.Name(), filterString)
+				printHighlightText(fv, filterString)
 			}
 		}
 	}

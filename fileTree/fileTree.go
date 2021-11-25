@@ -6,28 +6,15 @@ import (
 	"io/fs"
 	"os/user"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 )
 
-type Directory struct {
-	Path string
-	Files map[string]fs.DirEntry
-}
-
-// declare the DirList type
-type DirList []Directory
-func (dl DirList) Len() int {return len(dl)}
-func (dl DirList) Less(a,b int) bool {return dl[a].Path<dl[b].Path}
-func (dl DirList) Swap(a,b int) {dl[a], dl[b] = dl[b], dl[a]}
-func (dl DirList) Add(newDir Directory) DirList { return append(dl, newDir)}
 
 
 func MakeNewDir(dirPath string) Directory{
 	newDir := Directory{Path: dirPath}
-	newDir.Files = make(map[string]fs.DirEntry)
 	return newDir
 }
 
@@ -92,7 +79,7 @@ func loadDir(fileSystem fs.FS, dirPath string, filterTerms []string, showHidden 
 		} else {
 			if (showHidden || !isHiddenFile(p)) && matchPatterns(entry.Name(), filterTerms... ) {
 				//fmt.Printf("adding file %s\n", p)
-				dir.Files[entry.Name()] = entry
+				dir.Files.Add(entry.Name())
 			}
 		}
 	}
@@ -119,7 +106,7 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHi
 		for newDir := range dirChan{
 			//fmt.Printf("1- got a dir in the dirChan %s, new file count %d, total file cound %d\n", newDir.Path, len(newDir.Files), fileCountInt64)
 			// TODO the atomic call below may not be needed.
-			dirs = dirs.Add(newDir)
+			dirs.Add(newDir)
 			var newFilesCount int64 = int64(len(newDir.Files))
 			atomic.AddInt64(&fileCountInt64, newFilesCount)
 			//fmt.Printf("2- got a dir in the dirChan %s, new file count %d, total file cound %d\n", newDir.Path, len(newDir.Files), fileCountInt64)
@@ -134,7 +121,7 @@ func GetFileTree(fileSystem fs.FS, rootPath string, filterPattern string, showHi
 	wg.Wait()
 	close(dirChan)
 	// sort the directories by path
-	sort.Sort(dirs)
+	dirs.Sort()
 	//fmt.Printf("closing the channel\n")
 	fileCount = int(fileCountInt64)
 	return

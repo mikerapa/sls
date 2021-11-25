@@ -36,11 +36,6 @@ func TestMakeNewDir(t *testing.T) {
 	if len(newDir.Path) ==0 || !strings.Contains(newDir.Path, "temp"){
 		t.Errorf("MakeNewDir: path not set correctly. Got %s", newDir.Path)
 	}
-
-	// make sure the Files map has been made
-	if newDir.Files == nil {
-		t.Error("MakeNewDir: Files map was not initialized")
-	}
 }
 
 
@@ -62,6 +57,7 @@ func makeTestFS() fstest.MapFS{
 	}
 	return fakeFS
 }
+
 
 func TestGetFileTree(t *testing.T) {
 	const (testDirPath = "testfiles"
